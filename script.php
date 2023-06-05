@@ -1,0 +1,112 @@
+#!/usr/bin/php
+<?php
+
+require 'vendor/autoload.php';
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+use \PhpOffice\PhpSpreadsheet\Shared\Date;
+
+$spreadsheet = new Spreadsheet();
+
+$datej = '20230531';//date("Ymd");
+$datem = '202305';//date("Ym");
+
+//$link = mysqli_connect('localhost', 'root', '\$Cailloux44\$', 'dolibarrdebian');
+$link = mysqli_connect('localhost', 'sebastien', 'temp1234', 'singadrdolnantes');
+$link->set_charset("utf8mb4");
+
+$countWorksheet = 0;
+
+addWorkSheet($datej);
+addWorkSheet($datem);
+addTotalWorkSheet($datem);
+
+// Enregistrement du fichier
+$writer = new Xlsx($spreadsheet);
+$writer->save($datej . '.xlsx');
+
+function addWorkSheet($date) {
+	global $countWorksheet, $link, $spreadsheet;
+	
+	if (!$countWorksheet++)
+		$sheet = $spreadsheet->getActiveSheet();
+	else
+		$sheet = $spreadsheet->createSheet();
+	
+	$sheet->setTitle('Vente ' . $date);
+	
+	$data = "SELECT catn.label as CATEGORIE, f.ref, f.datef, f.pos_source as TERMINAL, fd.total_ht as MONTANT, fd.qty as QUANTITE, p.ref as REFERENCE, p.label as DESCRIPTION FROM llx_societe as s LEFT JOIN llx_c_country as c on s.fk_pays = c.rowid LEFT JOIN llx_facture as f ON  s.rowid = f.entity LEFT JOIN llx_c_departements as cd on s.fk_departement = cd.rowid LEFT JOIN llx_projet as pj ON f.fk_projet = pj.rowid LEFT JOIN llx_user as uc ON f.fk_user_author = uc.rowid LEFT JOIN llx_user as uv ON f.fk_user_valid = uv.rowid LEFT JOIN llx_facturedet as fd ON f.rowid =fd.fk_facture LEFT JOIN llx_facture_extrafields as extra ON f.rowid = extra.fk_object LEFT JOIN llx_facturedet_extrafields as extra2 on fd.rowid = extra2.fk_object LEFT JOIN llx_product as p on (fd.fk_product = p.rowid) LEFT JOIN llx_product_extrafields as extra3 on p.rowid = extra3.fk_object LEFT JOIN llx_categorie_product as cat on cat.fk_product = fd.fk_product LEFT JOIN llx_categorie as catn ON catn.rowid = cat.fk_categorie  WHERE f.rowid = fd.fk_facture AND f.entity IN (1) and date_format(f.datef,'%Y%m') = " . $date . " ORDER BY CATEGORIE;";
+
+	$row = 1;
+	$sheet->insertNewRowBefore($row);
+	$sheet->getColumnDimension('A')->setWidth(20);
+	$sheet->getColumnDimension('B')->setWidth(20);
+	$sheet->getColumnDimension('C')->setWidth(20);
+	$sheet->getColumnDimension('D')->setWidth(10);
+	$sheet->getColumnDimension('E')->setWidth(10);
+	$sheet->getColumnDimension('F')->setWidth(10);
+	$sheet->getColumnDimension('G')->setWidth(30);
+	$sheet->getColumnDimension('H')->setWidth(100);
+	$sheet->setCellValue('A'.$row, 'CATEGORIE');
+	$sheet->setCellValue('B'.$row, 'REF FACTURE');
+	$sheet->setCellValue('C'.$row, 'DATE');
+	$sheet->setCellValue('D'.$row, 'TERMINAL');
+	$sheet->setCellValue('E'.$row, 'MONTANT');
+	$sheet->setCellValue('F'.$row, 'QUANTITE');
+	$sheet->setCellValue('G'.$row, 'REF PRODUIT');
+	$sheet->setCellValue('H'.$row, 'DESCRIPTION');
+	
+	$result = $link->query($data)->fetch_all(MYSQLI_ASSOC);
+	if (count($result) > 0)
+	{
+		foreach ($result as $data) {
+			$row = $sheet->getHighestRow()+1;
+			$sheet->insertNewRowBefore($row);
+			$sheet->setCellValue('A'.$row, $data['CATEGORIE']);
+			$sheet->setCellValue('B'.$row, $data['ref']);
+			$sheet->getStyle('C'.$row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_DATE_DDMMYYYY);
+			$sheet->setCellValue('C'.$row, Date::PHPToExcel($data['datef']));
+			$sheet->setCellValue('D'.$row, $data['TERMINAL']);
+			$sheet->getStyle('E'.$row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_CURRENCY_EUR);
+			$sheet->setCellValue('E'.$row, $data['MONTANT']);
+			$sheet->setCellValue('F'.$row, $data['QUANTITE']);
+			$sheet->setCellValue('G'.$row, $data['REFERENCE']);
+			$sheet->setCellValue('H'.$row, $data['DESCRIPTION']);
+		}
+	}
+}
+
+function addTotalWorkSheet($date) {
+	global $countWorksheet, $link, $spreadsheet;
+	
+	if (!$countWorksheet++)
+		$sheet = $spreadsheet->getActiveSheet();
+	else
+		$sheet = $spreadsheet->createSheet();
+	
+	$sheet->setTitle('TOTAL ' . $date);
+	
+	$data = "SELECT catn.label as CATEGORIE, sum(fd.total_ht) as MONTANT FROM llx_societe as s LEFT JOIN llx_c_country as c on s.fk_pays = c.rowid LEFT JOIN llx_facture as f ON  s.rowid = f.entity LEFT JOIN llx_c_departements as cd on s.fk_departement = cd.rowid LEFT JOIN llx_projet as pj ON f.fk_projet = pj.rowid LEFT JOIN llx_user as uc ON f.fk_user_author = uc.rowid LEFT JOIN llx_user as uv ON f.fk_user_valid = uv.rowid LEFT JOIN llx_facturedet as fd ON f.rowid =fd.fk_facture LEFT JOIN llx_facture_extrafields as extra ON f.rowid = extra.fk_object LEFT JOIN llx_facturedet_extrafields as extra2 on fd.rowid = extra2.fk_object LEFT JOIN llx_product as p on (fd.fk_product = p.rowid) LEFT JOIN llx_product_extrafields as extra3 on p.rowid = extra3.fk_object LEFT JOIN llx_categorie_product as cat on cat.fk_product = fd.fk_product LEFT JOIN llx_categorie as catn ON catn.rowid = cat.fk_categorie  WHERE f.rowid = fd.fk_facture AND f.entity IN (1) and date_format(f.datef,'%Y%m') = " . $date . " GROUP BY CATEGORIE ORDER BY CATEGORIE;";
+
+	$row = 1;
+	$sheet->insertNewRowBefore($row);
+	$sheet->getColumnDimension('A')->setWidth(20);
+	$sheet->getColumnDimension('E')->setWidth(10);
+	$sheet->setCellValue('A'.$row, 'CATEGORIE');
+	$sheet->setCellValue('E'.$row, 'MONTANT');
+	
+	$result = $link->query($data)->fetch_all(MYSQLI_ASSOC);
+	if (count($result) > 0)
+	{
+		foreach ($result as $data) {
+			$row = $sheet->getHighestRow()+1;
+			$sheet->insertNewRowBefore($row);
+			$sheet->setCellValue('A'.$row, $data['CATEGORIE']);
+			$sheet->getStyle('E'.$row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_CURRENCY_EUR);
+			$sheet->setCellValue('E'.$row, $data['MONTANT']);
+		}
+	}
+}
+
+?>
