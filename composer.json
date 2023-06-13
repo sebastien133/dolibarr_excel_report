@@ -1,6 +1,14 @@
 {
     "require": {
         "phpoffice/phpspreadsheet": "^1.28",
-        "vlucas/phpdotenv": "^5.5"
+        "vlucas/phpdotenv": "^5.5",
+        "symfony/mailer": "^6.3",
+        "ext-mysqli": "*"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "*"
+    },
+    "scripts": {
+        "php-cs-fixer": "php-cs-fixer --rules=@PSR1"
     }
 }

@@ -6,13 +6,16 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use \PhpOffice\PhpSpreadsheet\Shared\Date;
+use Symfony\Component\Mailer\Transport;
+use Symfony\Component\Mailer\Mailer;
+use Symfony\Component\Mime\Email;
 
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
-
 $dotenv->required(['DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASS']);
-var_dump($_ENV);
-$spreadsheet = new Spreadsheet();
+
+$transport = Transport::fromDsn($_ENV['DSN']);
+$mailer = new Mailer($transport);
 
 $datej = ($_ENV['DATE_J']?$_ENV['DATE_J']:date('yyyymmdd'));
 $datem = ($_ENV['DATE_M']?$_ENV['DATE_M']:date('yyyymmdd'));
@@ -20,15 +23,41 @@ $datem = ($_ENV['DATE_M']?$_ENV['DATE_M']:date('yyyymmdd'));
 $link = mysqli_connect($_ENV['DB_HOST'], $_ENV['DB_USER'], $_ENV['DB_PASS'], $_ENV['DB_NAME']);
 $link->set_charset("utf8mb4");
 
+$spreadsheet = new Spreadsheet();
 $countWorksheet = 0;
-
 addWorkSheet($datej);
 addWorkSheet($datem);
 addTotalWorkSheet($datem);
 
 // Enregistrement du fichier
 $writer = new Xlsx($spreadsheet);
-$writer->save($datej . '.xlsx');
+try {
+    $writer->save($_ENV['REPOSITORY'] . $datej . '.xlsx');
+} catch (\PhpOffice\PhpSpreadsheet\Writer\Exception $e) {
+    $email = (new Email())
+        ->from($_ENV['FROM'])
+        ->to($_ENV['TO'])
+        //->cc('cc@example.com')
+        //->bcc('bcc@example.com')
+        //->replyTo('fabien@example.com')
+        //->priority(Email::PRIORITY_HIGH)
+        ->subject("ERROR : création du fichier Excel impossible")
+        ->text("Le script de génération des rapports Excel n'a pas fonctionné.");
+}
+
+$email = (new Email())
+    ->from($_ENV['FROM'])
+    ->to($_ENV['TO'])
+    //->cc('cc@example.com')
+    //->bcc('bcc@example.com')
+    //->replyTo('fabien@example.com')
+    //->priority(Email::PRIORITY_HIGH)
+    ->subject($_ENV['SUBJECT'])
+    ->text('Sending emails is fun again!')
+    ->html('<p>See Twig integration for better HTML integration!</p>')
+    ->attachFromPath($_ENV['REPOSITORY'] . $datej . '.xlsx');
+
+$mailer->send($email);
 
 function addWorkSheet($date) {
 	global $countWorksheet, $link, $spreadsheet;
