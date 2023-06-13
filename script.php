@@ -7,13 +7,17 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use \PhpOffice\PhpSpreadsheet\Shared\Date;
 
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv->load();
+
+$dotenv->required(['DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASS']);
+var_dump($_ENV);
 $spreadsheet = new Spreadsheet();
 
-$datej = '20230531';//date("Ymd");
-$datem = '202305';//date("Ym");
+$datej = ($_ENV['DATE_J']?$_ENV['DATE_J']:date('yyyymmdd'));
+$datem = ($_ENV['DATE_M']?$_ENV['DATE_M']:date('yyyymmdd'));
 
-//$link = mysqli_connect('localhost', 'root', '\$Cailloux44\$', 'dolibarrdebian');
-$link = mysqli_connect('localhost', 'sebastien', 'temp1234', 'singadrdolnantes');
+$link = mysqli_connect($_ENV['DB_HOST'], $_ENV['DB_USER'], $_ENV['DB_PASS'], $_ENV['DB_NAME']);
 $link->set_charset("utf8mb4");
 
 $countWorksheet = 0;
