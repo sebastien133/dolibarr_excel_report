@@ -3,12 +3,18 @@
         "phpoffice/phpspreadsheet": "^1.28",
         "vlucas/phpdotenv": "^5.5",
         "symfony/mailer": "^6.3",
-        "ext-mysqli": "*"
+        "ext-mysqli": "*",
+        "monolog/monolog": "^3.3"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "*"
+        "squizlabs/php_codesniffer": "*",
+        "friendsofphp/php-cs-fixer": "*",
+        "phpmd/phpmd": "*",
+        "phpstan/phpstan": "*"
     },
     "scripts": {
-        "php-cs-fixer": "php-cs-fixer --rules=@PSR1"
+        "phpcs": "phpcs --standard=PSR2",
+        "php-cs-fixer": "php-cs-fixer --rules=@PSR1",
+        "phpmd": "phpmd codesize,controversial,/my/src/custom_ruleset.xml"
     }
 }
