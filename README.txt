@@ -8,3 +8,4 @@ Mettre à jour les variables dans le fichier .env.
 
 Envoi de mails :
 
+L'envoi de mail se fait de manière automatique. Il est possible de conserver les fichiers sur le serveur en mettant la variable d'environnment ONLY_MAILS à false dans le fichier .env.

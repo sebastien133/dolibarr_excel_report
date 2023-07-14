@@ -55,6 +55,9 @@ try {
     $email = (new Email())->from($_ENV['FROM'])->to($_ENV['TO'])->subject('ERROR : création du fichier Excel impossible')->text("Le script de génération des rapports Excel n'a pas fonctionné aujourd'hui.");
 }
 
+if (isset($_ENV['SEND_MAILS']) && strtolower($_ENV['SEND_MAILS']) !== 'true') {
+    exit('Pas d\'envoi de fichier.');
+}
 
 try {
     $email = (new Email())->from($_ENV['FROM'])->to($_ENV['TO'])->subject($_ENV['SUBJECT'])->text('Le rapport Excel est joint à ce mail.')->html('<p>Le rapport Excel est joint à ce mail.</p>')->addPart(new DataPart(new File($file)));
@@ -67,7 +70,6 @@ try {
 } catch (TransportExceptionInterface $e) {
     $log->error('Erreur lors de l\'envoi de l\'email');
 }
-
 
 /**
  * @throws PhpOfficeException
