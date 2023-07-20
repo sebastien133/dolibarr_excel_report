@@ -33,7 +33,7 @@ $file = $_ENV['REPOSITORY'].$datej.'.xlsx';
 $log = new Logger('dolibarr_excel_report');
 $log->pushHandler(new StreamHandler($_ENV['REPOSITORY'].$datej.'.log', Level::Info));
 
-$transport = Transport::fromDsn(url_encode($_ENV['DSN']));
+$transport = Transport::fromDsn(urlencode($_ENV['DSN']));
 $mailer    = new Mailer($transport);
 
 $link = mysqli_connect($_ENV['DB_HOST'], $_ENV['DB_USER'], $_ENV['DB_PASS'], $_ENV['DB_NAME']);
