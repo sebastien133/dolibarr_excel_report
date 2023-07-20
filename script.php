@@ -22,8 +22,8 @@ $dotenv = Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 $dotenv->required(['DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASS']);
 
-const J_DATEFORMAT = 'yyyymmdd';
-const M_DATEFORMAT = 'yyyymm';
+const J_DATEFORMAT = 'Ymd';
+const M_DATEFORMAT = 'Ym';
 
 $datej = ($_ENV['DATE_J'] ?: date(J_DATEFORMAT));
 $datem = ($_ENV['DATE_M'] ?: date(M_DATEFORMAT));
@@ -33,7 +33,7 @@ $file = $_ENV['REPOSITORY'].$datej.'.xlsx';
 $log = new Logger('dolibarr_excel_report');
 $log->pushHandler(new StreamHandler($_ENV['REPOSITORY'].$datej.'.log', Level::Info));
 
-$transport = Transport::fromDsn($_ENV['DSN']);
+$transport = Transport::fromDsn(url_encode($_ENV['DSN']));
 $mailer    = new Mailer($transport);
 
 $link = mysqli_connect($_ENV['DB_HOST'], $_ENV['DB_USER'], $_ENV['DB_PASS'], $_ENV['DB_NAME']);
