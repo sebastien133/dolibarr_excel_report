@@ -33,7 +33,13 @@ $file = $_ENV['REPOSITORY'].$datej.'.xlsx';
 $log = new Logger('dolibarr_excel_report');
 $log->pushHandler(new StreamHandler($_ENV['REPOSITORY'].$datej.'.log', Level::Info));
 
-$transport = Transport::fromDsn(urlencode($_ENV['DSN']));
+function myUrlEncode($string) {
+    $entities = array('%21', '%2A', '%27', '%28', '%29', '%3B', '%3A', '%40', '%26', '%3D', '%2B', '%24', '%2C', '%2F', '%3F', '%25', '%23', '%5B', '%5D');
+    $replacements = array('!', '*', "'", "(", ")", ";", ":", "@", "&", "=", "+", "$", ",", "/", "?", "%", "#", "[", "]");
+    return str_replace($entities, $replacements, urlencode($string));
+}
+
+$transport = Transport::fromDsn(myUrlEncode($_ENV['DSN']));
 $mailer    = new Mailer($transport);
 
 $link = mysqli_connect($_ENV['DB_HOST'], $_ENV['DB_USER'], $_ENV['DB_PASS'], $_ENV['DB_NAME']);
